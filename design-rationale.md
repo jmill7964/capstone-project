@@ -1,53 +1,43 @@
-# Design Rationale: Automated Configuration Backup, Change, Verification, and Rollback
+Design Rationale: Automated Configuration Backup, Change, Verification, and Rollback
 
-## Introduction
-This project was designed as an instructional network automation lab for undergraduate networking students. The lab teaches students how to implement a safe automation workflow using Python and Cisco IOS XE in the NDG Netlab DevNet environment. Rather than focusing only on making a configuration change, the lab emphasizes the full operational lifecycle of change management, including backup, validation, and rollback.
+Introduction
+This capstone project presents a network automation lab designed for undergraduate networking students. The Purpose of the lab is to introduce students to structured automation workflows that emphasize not only executing configuration changes but also ensuring operational safety through validation and rollback mechanisms. In modern networking environments, automation plays a critical role in managing large scale infrastructure efficiently. However, improper or unchecked automation can introduce significant risks, including service disruption and configuration drift. 
+This lab was intentionally designed to simulate a real-world network change scenario while remaining accessible to students with limited automation experience. It demonstrates a full life cycle of network change, including establishing connectivity, capturing the current state, applying A modification, verifying the result, and reverting to a well-known configuration if necessary. The instructional design ensures that students gain both technical and conceptual understanding of safe automation practices.
 
-The lab was intentionally scoped to fit within a 45–75 minute completion window while still exposing students to realistic automation concepts. The overall design reflects the idea that network automation must be technically correct, operationally safe, and instructionally clear.
+Tool and technology selection
+Python was selected as the primary programming language for this project due to its widespread adoption in network automation and its accessibility for students. Python's readability and extensive library support make it an ideal choice for introducing automation concepts in an academic environment. Students can focus on logic and workflow rather than complex syntax, which supports the instructional goal of clarity.
+The Netmiko library was chosen as the automation interface for interacting with Cisco IOS XE devices. Netmiko provides a simplified abstraction over SSH, allowing scripts to send commands and receive output in a manner like traditional CLI interactions. This approach bridges the gap between manual configuration and automated workflows, making it easier for students to understand how automation relates to existing networking knowledge.
+The Cisco IOS XE CSR 1000v platform was used because it aligns with the NDG Netlab dev net environment required for this course. This platform provides A realistic enterprise networking environment while remaining accessible in a virtualized lab setting. Using iOS EXE also ensures that students are working with technologies commonly found in production networks.
 
-## Tool and Approach Selection
-Python was selected as the primary automation language because it is widely used in network automation and is accessible to undergraduate students. Its syntax is readable, and it supports a large ecosystem of libraries relevant to network programmability.
+Automation Approach
+The automation workflow implemented in this project follows A structured sequence designed to reflect industry’s best practices for network change management. The process begins with establishing a secure SSH connection to the device using Netmiko. Once connected, the script retrieves the running configuration and saves it locally as a backup. This step ensures the original state of the device is preserved before any changes are made. Next line in addition to the local backup the script reads a checkpoint directly on the device using the “copy running-config flash:” command. This provides a faster and reliable rollback mechanism that can be executed on the device itself. The script then applies to a configuration change, specifically modifying the host name of the device. This change was selected because it is simple, easily verifiable, and low risk. 
+After applying the change, the script performs A verification step by checking the running configuration for the expected host name. If the verification succeeds, the script confirms that the operation was successful. If the verification fails, the script initiates rollback using the “configure replace” command to restore the device to its previous state. 
+This workflow demonstrates a complete automation lifecycle and reinforces the principle that automation should include validation and recovery, not just execution.
 
-Netmiko was selected as the primary automation library because it provides a simple and reliable SSH interface for Cisco IOS XE devices. This allows students to automate tasks using the same command-line concepts they are already learning in traditional networking courses. Netmiko also reduces the complexity of connection handling, command execution, and configuration mode transitions.
+Design Tradeoffs
+Several design trade-offs were considered during the development of this lab. One of the primary trade-offs was between simplicity and technical depth. While more advanced automation methods such as NETCONF or RESTCONF Could have been used, these approaches introduce additional complexity related to data modeling, payload construction, and protocol handling. For an undergraduate audience, this complexity may detract from the core learning objectives.
+By using a CLI based approach with Netmiko, the lab remains accessible while still providing meaningful exposure to automation concepts. The trade off is that CLI output is less structured than API responses which can make parsing and validation less precise. However, this limitation is acceptable given the instructional focus of the lab. 
+Another trade off involves security versus usability. Hardcoding credentials and scripts can simplify execution but introduces security risks and violates best practices to address this the final implementation prompts the user for credentials at runtime this approach improves security and align with real world practices although it adds a small amount of complexity for the user. 
+A third trade off was related to scope expanding the lab to include more complex configuration changes, such as interface or routing modifications, which could provide additional technical depth. However, these changes increase the risk of disrupting connectivity complicate rollback procedures. Limiting the scope to a host name change ensures that the lab remains safe and focused while demonstrating the essential concepts.
 
-The Cisco IOS XE CSR1000v platform was used because it aligns with the NDG Netlab DevNet environment required for the course. It also provides a realistic enterprise-style environment while remaining accessible in a virtual lab setting.
+Error Handling and Risk Mitigation
+ Error handling is a critical component of any automation workflow. This project incorporates multiple layers of error handling to ensure robustness and reliability.  The script includes handling for authentication failures, connection timeouts, and unexpected exceptions. These safeguards help students understand that automation must account for failure scenarios rather than assuming success.
+Risk mitigation is built into the design through several mechanisms. First, a local backup of the running configuration is created before any changes are made. This provides a reference point for recovery if needed. Second, a device checkpoint is stored in flash memory, enabling rapid rollback using native IOS XE functionality. Third, the scope of the configuration change is intentionally limited to minimize the potential impact.
+Perhaps the most important risk mitigation feature is the inclusion of rollback mechanism triggered by failed verification. This ensures that the network devices return to a known good state if the intended change is not successfully applied. By requiring students to intentionally trigger a failure scenario, the lab reinforces the importance of planning or in handling errors and automation workflows
 
-A CLI-based automation approach was chosen instead of NETCONF or RESTCONF because the goal of this lab is to provide a manageable entry point for undergraduate students. While model-driven interfaces are more structured and robust, they also introduce additional complexity in payload construction, schema understanding, and protocol handling. For this instructional context, CLI-based automation offers a more practical balance between realism and accessibility.
+Verification strategy
+The verification strategy used in this lab is intentionally straightforward and aligns with the instructional goals of the project. After applying the configuration change, the script retrieves the relevant portion of the running configuration and checks for the presence of the expected host name. This is accomplished using simple string comparison.
+While more advanced verification techniques could involve structured parsing or state comparison tools, the chosen approach is sufficient for the scope of the lab and is easy for students to understand. The verification step demonstrates the concept of validating network state without introducing unnecessary complexity. Next line to further reinforce the importance of validation, the lab requires students to intentionally modify the verification condition to force a failure. This triggers the rollback mechanism and allows students to observe how automation can recover from an incorrect or unexpected state. This design choice ensures that students gain experience with both successful and failed automation scenarios.
 
-## Automation Workflow Design
-The automation workflow follows a structured sequence:
+Instructional and design decisions
+This project was designed as a complete instructional experience rather than a simple coding exercise then student lab manual follows A structured format with clearly defined objectives, background information, step by step instructions, and explanations of what each step accomplishes and why it is important period this approach supports both procedural learning and conceptual understanding.
+The use of screenshot-based deliverables wasn't intentional decision to his line assessment with practical execution. Instead of answering theoretical questions, students must demonstrate that they can successfully perform each step of the automation workflow. This includes connecting to the device, creating backups, applying changes, verifying results, and executing rollback. This method of assessment encourages hands on engagement and reduces the likelihood of superficial completion. 
+The instructor guide was designed to support reuse in future course offerings period it includes expected outputs comma validation steps comma common student errors comma troubleshooting guidance comma and environment reset instructions period this ensures consistency and grading and makes it easier for instructors to implement the lab in an undergraduate curriculum.
 
-1. Prompt the user for device IP address, username, and password  
-2. Establish an SSH connection to the device  
-3. Capture the running configuration and save it locally  
-4. Create a device checkpoint in flash storage  
-5. Apply a configuration change  
-6. Verify the result of the change  
-7. Trigger rollback if verification fails  
-8. Disconnect from the device  
+Conclusion
+ this capstone project demonstrates A practical and Functional approach to network automation. By combining Python, Netmiko, and Cisco IOS XE, the lab introduces students to a complete automation workflow that includes backup, change, verification, and rollback. The design balances technical realism with accessibility, making it suitable for undergraduate students still reflecting the real-world practices.
+The emphasis on validation and rollback highlights the importance of safety and automation. Rather than focusing solely on executing commands, the lab teaches students how to manage risk and ensure network stability. These skills are essential for modern networking engineers and align with the broader goals of the course.
+Overall, the project successfully integrates technical implementation with instructional design, providing A reusable lab that supports both learning and practical application.
 
-This workflow was chosen because it mirrors real-world change management practices. Production network changes should not be made without a backup, and they should not be considered complete until validation confirms that the intended state was achieved.
 
-The selected configuration change was limited to the device hostname. This was an intentional instructional decision. A hostname change is easy to verify, introduces minimal operational risk, and provides a clear example of pre-change state, post-change state, and rollback behavior.
 
-## Design Tradeoffs
-One major tradeoff in this project was simplicity versus robustness. A more advanced implementation could use structured parsing tools such as pyATS/Genie or a model-driven interface such as NETCONF. However, these approaches would add technical depth at the cost of greater complexity for students.
-
-By using Netmiko and CLI-based verification, the lab remains understandable and achievable within the required timeframe. The tradeoff is that CLI output is less structured than API-based responses, which can make parsing and validation less precise.
-
-Another tradeoff was security versus instructional simplicity. To satisfy repository quality expectations, the final automation script prompts the user for credentials rather than hardcoding them. This improves security and aligns with best practices. At the same time, it slightly increases the number of prompts students must work through while testing the script.
-
-A third tradeoff involved scope control. The lab could have been expanded to include interface configuration, VLAN creation, or policy changes. However, such changes increase the risk of disrupting connectivity and may complicate rollback behavior. Restricting the change to the hostname keeps the lab safe and focused while still demonstrating the essential concepts.
-
-## Error Handling and Risk Mitigation
-Error handling is a key part of the design. The script includes handling for authentication failure, connection timeout, and general unexpected exceptions. This helps students understand that automation workflows must anticipate failure conditions rather than assuming success.
-
-Risk mitigation is built into the lab in several ways. First, a local backup is created before any change is made. Second, a device checkpoint is stored in flash so that rollback can be performed directly on the device. Third, the scope of change is limited to the hostname, which minimizes the chance of breaking management access or routing behavior. Finally, the lab requires students to intentionally trigger a verification failure so they can observe the rollback process in action.
-
-This emphasis on rollback is one of the most important design features of the project. In operational environments, failed changes must be reversible. By making rollback a required part of the student demonstration, the lab reinforces the principle that safe automation is not just about speed—it is about control and recoverability.
-
-## Verification Strategy
-The verification method used in this lab is intentionally straightforward. After the configuration change is applied, the script runs:
-
-```python
-verify = connection.send_command("show running-config | include ^hostname")
